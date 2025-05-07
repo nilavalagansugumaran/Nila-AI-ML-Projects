@@ -4,12 +4,11 @@ This sample implemetation is going to use a generative AI pre-trained model to c
 
 
 ```python
-# Let's first configure AWS environment to connect with the foundation model
-# One of the was to connect to AWS is using access and secret keys and these can be set as env variables. 
+# Let's first configure AWS environment to connect with the foundation model 
 # NOT RECOMMENDED FOR PRODUCTION DEPLOYMENT OR FOR SHARING IN PUBLIC.
 import os
-os.environ['AWS_ACCESS_KEY_ID'] = 'Your key id'
-os.environ['AWS_SECRET_ACCESS_KEY'] = 'Your key'
+# os.environ['AWS_ACCESS_KEY_ID'] = 'Your key id'
+# os.environ['AWS_SECRET_ACCESS_KEY'] = 'Your key'
 
 os.environ['AWS_DEFAULT_REGION'] = 'us-east-1'
 ```
@@ -22,7 +21,7 @@ import boto3
 
 
 ```python
-# bedroc client to explore the available foundation models
+# bedrock client to explore the available foundation models
 bedrock = boto3.client(service_name='bedrock',region_name='us-east-1')
 ```
 
@@ -34,13 +33,13 @@ bedrock.list_foundation_models()
 
 
 
-    {'ResponseMetadata': {'RequestId': 'ec28e0ed-ffbb-467d-9f87-a3d8d123ebd2',
+    {'ResponseMetadata': {'RequestId': 'c7cd2acd-ca8b-47e2-8bbb-b96fcd57aedc',
       'HTTPStatusCode': 200,
-      'HTTPHeaders': {'date': 'Tue, 06 May 2025 20:55:46 GMT',
+      'HTTPHeaders': {'date': 'Wed, 07 May 2025 04:39:44 GMT',
        'content-type': 'application/json',
        'content-length': '54644',
        'connection': 'keep-alive',
-       'x-amzn-requestid': 'ec28e0ed-ffbb-467d-9f87-a3d8d123ebd2'},
+       'x-amzn-requestid': 'c7cd2acd-ca8b-47e2-8bbb-b96fcd57aedc'},
       'RetryAttempts': 0},
      'modelSummaries': [{'modelArn': 'arn:aws:bedrock:us-east-1::foundation-model/amazon.titan-tg1-large',
        'modelId': 'amazon.titan-tg1-large',
@@ -968,13 +967,13 @@ bedrock.get_foundation_model(modelIdentifier='amazon.titan-text-express-v1')
 
 
 
-    {'ResponseMetadata': {'RequestId': 'fc114c5c-0dfb-4108-abd8-787361088fe1',
+    {'ResponseMetadata': {'RequestId': 'c6d0b89a-6902-4db8-8900-3be6e3c900dc',
       'HTTPStatusCode': 200,
-      'HTTPHeaders': {'date': 'Tue, 06 May 2025 20:55:47 GMT',
+      'HTTPHeaders': {'date': 'Wed, 07 May 2025 04:39:45 GMT',
        'content-type': 'application/json',
        'content-length': '524',
        'connection': 'keep-alive',
-       'x-amzn-requestid': 'fc114c5c-0dfb-4108-abd8-787361088fe1'},
+       'x-amzn-requestid': 'c6d0b89a-6902-4db8-8900-3be6e3c900dc'},
       'RetryAttempts': 0},
      'modelDetails': {'modelArn': 'arn:aws:bedrock:us-east-1::foundation-model/amazon.titan-text-express-v1',
       'modelId': 'amazon.titan-text-express-v1',
@@ -1049,19 +1048,19 @@ response
 
 
 
-    {'ResponseMetadata': {'RequestId': '5ea1fb20-ae5a-47f8-a0a1-28618ffdf5bc',
+    {'ResponseMetadata': {'RequestId': '0b9e77c6-bc88-4d21-a201-c197f0281ede',
       'HTTPStatusCode': 200,
-      'HTTPHeaders': {'date': 'Tue, 06 May 2025 20:55:54 GMT',
+      'HTTPHeaders': {'date': 'Wed, 07 May 2025 04:39:49 GMT',
        'content-type': 'application/json',
-       'content-length': '546',
+       'content-length': '224',
        'connection': 'keep-alive',
-       'x-amzn-requestid': '5ea1fb20-ae5a-47f8-a0a1-28618ffdf5bc',
-       'x-amzn-bedrock-invocation-latency': '6588',
-       'x-amzn-bedrock-output-token-count': '128',
+       'x-amzn-requestid': '0b9e77c6-bc88-4d21-a201-c197f0281ede',
+       'x-amzn-bedrock-invocation-latency': '3731',
+       'x-amzn-bedrock-output-token-count': '41',
        'x-amzn-bedrock-input-token-count': '9'},
       'RetryAttempts': 0},
      'contentType': 'application/json',
-     'body': <botocore.response.StreamingBody at 0x10d3bae00>}
+     'body': <botocore.response.StreamingBody at 0x106350d60>}
 
 
 
@@ -1075,8 +1074,17 @@ response_body
 
 
     {'inputTextTokenCount': 9,
-     'results': [{'tokenCount': 128,
-       'outputText': '\nMount Everest, the highest mountain on Earth, is located in the Mahalangur Himal sub-range of the Himalayas. The mountain is in the Mahalangur Himal sub-range of the Himalayas, and the border between Nepal and Tibet runs across its summit point. It is situated in the Solukhumbu District of Province No. 1, 8 km (5.0 mi) northeast of Mount Lhotse (8,516 m (27,940 ft)). Everest is the highest point on Earth, with a topographic prominence of 8,',
-       'completionReason': 'LENGTH'}]}
+     'results': [{'tokenCount': 41,
+       'outputText': '\nMount Everest, the highest mountain on Earth, is located in the Himalayas. The mountain is 8,848 meters (29,029 feet) tall.',
+       'completionReason': 'FINISH'}]}
 
+
+
+
+```python
+print(response_body['results'][0]['outputText'])
+```
+
+    
+    Mount Everest, the highest mountain on Earth, is located in the Himalayas. The mountain is 8,848 meters (29,029 feet) tall.
 
