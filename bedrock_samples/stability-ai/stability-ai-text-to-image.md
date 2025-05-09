@@ -1,10 +1,16 @@
-# Meta Llama - Text generation with inference parameters
+# Text to Image using Stability AI model
 
-Anaother text generation LLM availabe in Aamzon Bedrock is - Llama. In this example, I am going to use this model to generate text. 
+We can create images from text prompt using a number of models available in Amazon bedrock. Important inference parameters to consider while generating image from a text are,
+- **text prompt** - Can be positive and negative
+- **seed** - Random seed for reproducibility
+- **size** - Height and Width
+- **cfg-scale** - Indicates how close the image should for the prompt. Lower number will increase randomness in the generation of the image.
 
-Note - Eventhough some of these inference parameters applicable for any LLM - (temperature, topP, topK, stop-sequence, max_token_count), not all models follow same model/inference syntax and request/response structure. Ensure to refere to the documentation to understand the correct inference parameters, response messages and syntax.
+Note - To find the exact parameter names, refer to model documentation.
 
-Refence documentation - https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-meta.html
+We are going to generate an image of a flower `rose` using Stability AI model - `stability.stable-diffusion-xl-v1`
+
+Documentaion - https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-diffusion-1-0-text-image.html 
 
 ## Step 1: Configure AWS environment
 
@@ -13,18 +19,14 @@ Refence documentation - https://docs.aws.amazon.com/bedrock/latest/userguide/mod
 # Set env variables using os module .
 ## NOT RECOMMENDED FOR PRODUCTION DEPLOYMENTS OR TO SHARE ON PUBLIC DOMAIN
 import os
-```
-
-
-```python
-os.environ['AWS_SECRET_ACCESS_KEY'] = 'your key id'
+os.environ['AWS_ACCESS_KEY_ID'] = 'your key id'
 os.environ['AWS_SECRET_ACCESS_KEY'] = 'your secret'
 
 os.environ['AWS_DEFAULT_REGION'] = 'us-east-1'
 ```
 
 ## Step 2: Explore and choose the model of your choice
-we will be using Meta Llama LLM - `meta.llama3-70b-instruct-v1:0`
+We will use Stability AI model - `stability.stable-diffusion-xl-v1`
 
 
 ```python
@@ -40,19 +42,20 @@ bedrock = boto3.client(service_name='bedrock',
 
 
 ```python
+# To list available models
 bedrock.list_foundation_models()
 ```
 
 
 
 
-    {'ResponseMetadata': {'RequestId': '05dd09eb-e453-4828-8a95-82a081a63023',
+    {'ResponseMetadata': {'RequestId': '314391ff-6af4-4bbc-9bc5-58b4b672ee55',
       'HTTPStatusCode': 200,
-      'HTTPHeaders': {'date': 'Thu, 08 May 2025 10:19:19 GMT',
+      'HTTPHeaders': {'date': 'Fri, 09 May 2025 05:11:23 GMT',
        'content-type': 'application/json',
        'content-length': '54644',
        'connection': 'keep-alive',
-       'x-amzn-requestid': '05dd09eb-e453-4828-8a95-82a081a63023'},
+       'x-amzn-requestid': '314391ff-6af4-4bbc-9bc5-58b4b672ee55'},
       'RetryAttempts': 0},
      'modelSummaries': [{'modelArn': 'arn:aws:bedrock:us-east-1::foundation-model/amazon.titan-tg1-large',
        'modelId': 'amazon.titan-tg1-large',
@@ -971,46 +974,58 @@ bedrock.list_foundation_models()
 
 
 ```python
-bedrock.get_foundation_model(modelIdentifier='meta.llama3-70b-instruct-v1:0')
+# Get model details
+bedrock.get_foundation_model(modelIdentifier='stability.stable-diffusion-xl-v1')
 ```
 
 
 
 
-    {'ResponseMetadata': {'RequestId': '5730015a-c54f-4ff0-ac41-c575c5cb5d5b',
+    {'ResponseMetadata': {'RequestId': '1871493a-dec1-42f2-a238-a6c473d415ab',
       'HTTPStatusCode': 200,
-      'HTTPHeaders': {'date': 'Thu, 08 May 2025 10:19:19 GMT',
+      'HTTPHeaders': {'date': 'Fri, 09 May 2025 05:11:23 GMT',
        'content-type': 'application/json',
-       'content-length': '521',
+       'content-length': '532',
        'connection': 'keep-alive',
-       'x-amzn-requestid': '5730015a-c54f-4ff0-ac41-c575c5cb5d5b'},
+       'x-amzn-requestid': '1871493a-dec1-42f2-a238-a6c473d415ab'},
       'RetryAttempts': 0},
-     'modelDetails': {'modelArn': 'arn:aws:bedrock:us-east-1::foundation-model/meta.llama3-70b-instruct-v1:0',
-      'modelId': 'meta.llama3-70b-instruct-v1:0',
-      'modelName': 'Llama 3 70B Instruct',
-      'providerName': 'Meta',
-      'inputModalities': ['TEXT'],
-      'outputModalities': ['TEXT'],
-      'responseStreamingSupported': True,
+     'modelDetails': {'modelArn': 'arn:aws:bedrock:us-east-1::foundation-model/stability.stable-diffusion-xl-v1',
+      'modelId': 'stability.stable-diffusion-xl-v1',
+      'modelName': 'SDXL 1.0',
+      'providerName': 'Stability AI',
+      'inputModalities': ['TEXT', 'IMAGE'],
+      'outputModalities': ['IMAGE'],
       'customizationsSupported': [],
       'inferenceTypesSupported': ['ON_DEMAND'],
-      'modelLifecycle': {'status': 'ACTIVE'}}}
+      'modelLifecycle': {'status': 'LEGACY'}}}
 
 
 
 ## Step 3: Prepare prompt for the model
 
-Document reference - https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-meta.html#model-parameters-meta-request-response 
+As per the documentation below is the request format,
 ```
 {
-    "prompt": string,
-    "temperature": float,
-    "top_p": float,
-    "max_gen_len": int
+        "text_prompts": [
+            {
+                "text": string,
+                "weight": float
+            }
+        ],
+        "height": int,
+        "width": int,
+        "cfg_scale": float,
+        "clip_guidance_preset": string,
+        "sampler": string,
+        "samples",
+        "seed": int,
+        "steps": int,
+        "style_preset": string,
+        "extras" :JSON object
+        
 }
 ```
-
-Meta also provides recommendation for prompt text for optimum results. Refer to prompt engineering concepts
+We will use only few parameters in this example
 
 
 ```python
@@ -1021,30 +1036,31 @@ import json
 
 ```python
 # Define the prompt for the model.
-prompt = "Tell me about United Kingdom"
-
-# Embed the prompt in Llama 3's instruction format.
-formatted_prompt = f"""
-<|begin_of_text|><|start_header_id|>user<|end_header_id|>
-{prompt}
-<|eot_id|>
-<|start_header_id|>assistant<|end_header_id|>
-"""
+positive_prompt = "Create a picture of a natural rose flower with dews on the pettles, leaf and stem"
+negative_prompt = "paining, drawing, blury"
 
 req = json.dumps({
-    'prompt': formatted_prompt,
-    'temperature': 1.0,
-    'top_p': 1.0,
-    'max_gen_len': 50
+        "text_prompts": [
+            {
+                "text": positive_prompt,
+                "weight": 1
+            },
+            {
+                "text": negative_prompt,
+                "weight": -1
+            },            
+        ],
+        "height": 1024,
+        "width": 1024,
+        "cfg_scale": 7,
+        "samples": 1,
+        "seed": 5,
+        "steps": 30        
 })
-```
-
-
-```python
 print(req)
 ```
 
-    {"prompt": "\n<|begin_of_text|><|start_header_id|>user<|end_header_id|>\nTell me about United Kingdom\n<|eot_id|>\n<|start_header_id|>assistant<|end_header_id|>\n", "temperature": 1.0, "top_p": 1.0, "max_gen_len": 50}
+    {"text_prompts": [{"text": "Create a picture of a natural rose flower with dews on the pettles, leaf and stem", "weight": 1}, {"text": "paining, drawing, blury", "weight": -1}], "height": 1024, "width": 1024, "cfg_scale": 7, "samples": 1, "seed": 5, "steps": 30}
 
 
 ## Step 4: Create bedrock runtime to invoke the model
@@ -1054,72 +1070,67 @@ print(req)
 bedrock_runtime = boto3.client(service_name='bedrock-runtime', region_name='us-east-1')
 ```
 
-## Step 5: Invoke the model to get the text generated
+## Step 5: Invoke the model to get the image generated
 
 
 ```python
-response = bedrock_runtime.invoke_model(body=req, modelId='meta.llama3-70b-instruct-v1:0')
-response
+response = bedrock_runtime.invoke_model(body=req, modelId='stability.stable-diffusion-xl-v1')
 ```
 
-
-
-
-    {'ResponseMetadata': {'RequestId': '1b0e639d-40c8-41c5-a46a-cea0bbd9cc10',
-      'HTTPStatusCode': 200,
-      'HTTPHeaders': {'date': 'Thu, 08 May 2025 10:19:20 GMT',
-       'content-type': 'application/json',
-       'content-length': '338',
-       'connection': 'keep-alive',
-       'x-amzn-requestid': '1b0e639d-40c8-41c5-a46a-cea0bbd9cc10',
-       'x-amzn-bedrock-invocation-latency': '1164',
-       'x-amzn-bedrock-output-token-count': '50',
-       'x-amzn-bedrock-input-token-count': '18'},
-      'RetryAttempts': 0},
-     'contentType': 'application/json',
-     'body': <botocore.response.StreamingBody at 0x1085cafe0>}
-
-
-
-## Step 6: Extract the generated content from the response body
-
-response format
+## Step 6: Process the response to get the image
+Usually the image will be in base64 format. Need to use base64 decoder to get the image in the formats such as png, jpeg etc.
+Stability AI model response format is as below,
 ```
 {
-    "generation": "\n\n<response>",
-    "prompt_token_count": int,
-    "generation_token_count": int,
-    "stop_reason" : string
+    "result": string,
+    "artifacts": [
+        {
+            "seed": int,
+            "base64": string,
+            "finishReason": string
+        }
+    ]
 }
 ```
+Lets use base64 and PIL.Image models for this purpose
 
 
 ```python
-body = json.loads(response.get('body').read())
-body
+response_body = json.loads(response.get('body').read())
+#response_body
 ```
 
 
+```python
+# Use base64 module to decode the image
+import base64
+```
 
 
-    {'generation': 'The United Kingdom (UK) - a country steeped in history, culture, and natural beauty!\n\n** Geography and Climate **\n\nThe UK is an island nation located off the northwest coast of Europe, comprising four constituent countries:\n\n1. **England**:',
-     'prompt_token_count': 18,
-     'generation_token_count': 50,
-     'stop_reason': 'length'}
+```python
+decoded_image = base64.b64decode(response_body['artifacts'][0]['base64'])
+#decoded_image
+```
 
+
+```python
+# If you encounter PIL not found, then install Pillow - works on MacOS
+!pip install Pillow
+```
+
+    Looking in indexes: https://pypi.python.org/simple
+    Requirement already satisfied: Pillow in /Users/nila/Documents/Learning.nosync/AI/Nila-AI-ML-Projects/bedrock_samples/env/lib/python3.13/site-packages (11.2.1)
 
 
 
 ```python
-gen_text = body['generation']
-print(gen_text)
+# To export the image as png, lets use PIL.Image
+from PIL import Image
 ```
 
-    The United Kingdom (UK) - a country steeped in history, culture, and natural beauty!
-    
-    ** Geography and Climate **
-    
-    The UK is an island nation located off the northwest coast of Europe, comprising four constituent countries:
-    
-    1. **England**:
 
+```python
+with open("rose.png", 'wb') as file:
+    file.write(decoded_image)
+#Image.open("rose.png")
+```
